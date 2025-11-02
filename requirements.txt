@@ -1,0 +1,38 @@
+numpy>=1.26,<2.0
+pandas>=2.1
+scipy>=1.11
+
+# RL
+gymnasium>=0.29
+stable-baselines3>=2.3.0
+torch>=2.2
+
+# Data sources
+yfinance>=0.2.40
+fredapi>=0.5.1
+requests>=2.31
+
+# NLP / sentiment
+transformers>=4.40
+sentencepiece>=0.2.0
+
+# Experiment tracking
+mlflow>=2.14
+
+# LLM reasoning
+anthropic>=0.34.0
+
+# API / dashboard
+fastapi>=0.111
+uvicorn[standard]>=0.30
+streamlit>=1.36
+plotly>=5.22
+
+# Validation / config
+pydantic>=2.7
+pydantic-settings>=2.3
+python-dotenv>=1.0
+
+# Testing
+pytest>=8.2
+httpx>=0.27

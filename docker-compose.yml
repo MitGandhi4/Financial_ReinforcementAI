@@ -1,0 +1,77 @@
+version: "3.9"
+
+services:
+  mlflow:
+    image: python:3.11-slim
+    container_name: alpharl-mlflow
+    working_dir: /mlflow
+    command: >
+      bash -c "pip install --no-cache-dir mlflow==2.14.1 &&
+               mlflow server --host 0.0.0.0 --port 5000
+               --backend-store-uri sqlite:///mlflow.db
+               --default-artifact-root /mlflow/artifacts"
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlflow:/mlflow
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: alpharl-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    # Free, local LLM reasoning provider. After first `docker compose up`,
+    # run: docker exec -it alpharl-ollama ollama pull llama3.1
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: alpharl-api
+    env_file:
+      - .env
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - OLLAMA_BASE_URL=http://ollama:11434
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    depends_on:
+      - mlflow
+      - ollama
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dashboard
+    container_name: alpharl-dashboard
+    environment:
+      - ALPHARL_API_URL=http://api:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+
+  training:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.training
+    container_name: alpharl-training
+    env_file:
+      - .env
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    depends_on:
+      - mlflow
+    profiles:
+      - training  # run explicitly: docker compose --profile training run training
+
+volumes:
+  ollama-data:
